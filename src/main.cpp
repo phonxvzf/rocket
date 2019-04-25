@@ -2,11 +2,12 @@
 #include <SDL2/SDL.h>
 
 #include "main.hpp"
+#include "sdl_exception.hpp"
 #include "main_loop.hpp"
 
 int main() {
   if (SDL_Init(SDL_INIT_VIDEO)) {
-    std::cerr << SDL_GetError() << std::endl;
+    throw sdl_exception("Could not initialize video");
     return EXIT_FAILURE;
   }
 

@@ -1,4 +1,5 @@
 #include "main_loop.hpp"
+#include "sdl_exception.hpp"
 
 main_loop::main_loop(SDL_Window *window, int width, int height)
   : m_window_width(width), m_window_height(height)
@@ -8,7 +9,7 @@ main_loop::main_loop(SDL_Window *window, int width, int height)
       -1,
       SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC
       );
-  // TODO: sdl_exception
+  if (m_renderer == nullptr) throw sdl_exception("Could not create renderer");
 }
 
 void main_loop::clean_up() {
