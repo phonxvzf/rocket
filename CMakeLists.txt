@@ -15,4 +15,4 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++14 -ggdb -pipe -Wall")
 add_executable(${BINARY} ${SOURCES})
 
 target_include_directories(${BINARY} PRIVATE include)
-target_link_libraries(${BINARY} SDL2::SDL2)
+target_link_libraries(${BINARY} SDL2)
