@@ -7,22 +7,13 @@ main_loop::main_loop(SDL_Window *window, int width, int height)
   : m_window_width(width), m_window_height(height),
 
     // init simulator
-    simulator(SIM_SIZE)
+    simulator(new smoke_sim(SIM_SIZE))
 {
   m_renderer = SDL_CreateRenderer(
       window,
       -1,
       SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC
       );
-
-  // set gravity
-  for (int i = 0; i <= (int) SIM_SIZE; ++i) {
-    for (int j = 0; j <= (int) SIM_SIZE; ++j) {
-
-      this->simulator.get_vec_x()[i][j] = (0 <= j && j < 50 ? -10.0f : -5.0f);
-      this->simulator.get_vec_y()[i][j] = 20.0f;
-    }
-  }
 
   // set blend mode
   SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND);
@@ -45,6 +36,22 @@ void main_loop::keydown_callback(SDL_Scancode scancode) {
   }
 }
 
+void main_loop::init() {
+
+  // set fluid configuration
+  this->simulator
+    ->set_diffuse   (10)
+    ->set_viscosity (1);
+  
+  // set gravity
+  for (int i = 0; i <= (int) SIM_SIZE; ++i) {
+    for (int j = 0; j <= (int) SIM_SIZE; ++j) {
+      // this->simulator->get_vec_x()[i][j] = (0 <= j && j < 50 ? -3.0f : -5.0f);
+      this->simulator->get_vec_y()[i][j] = 10.0f;
+    }
+  }
+}
+
 void main_loop::draw(uint32_t dt) {
 
   static const int R = 0xEE;
@@ -56,9 +63,9 @@ void main_loop::draw(uint32_t dt) {
   // rocket_x = (rocket_x + SIM_SIZE - 1) % SIM_SIZE;
   // rocket_y = (rocket_y + SIM_SIZE - 1) % SIM_SIZE;
 
-  this->simulator.get_dens()[rocket_x][rocket_y] += 10;
-  this->simulator.get_dens()[rocket_x + 10][rocket_y + 10] += 10;
-  this->simulator.simulate(dt / 100.0);
+  this->simulator->get_dens()[rocket_x][rocket_y] += 20;
+  this->simulator->get_dens()[rocket_x + 10][rocket_y + 10] += 20;
+  this->simulator->simulate(dt / 100.0);
 
 
   // fill background
@@ -80,7 +87,7 @@ void main_loop::draw(uint32_t dt) {
 
       // draw density
       SDL_Rect rect {x, y, (int) size_x + (i < pad_x), (int) size_y + (j < pad_y)};
-      const uint8_t alpha = std::min(255, (int) floor(this->simulator.get_dens()[i][j] * 256));
+      const uint8_t alpha = std::min(255, (int) floor(this->simulator->get_dens()[i][j] * 256));
 
       SDL_SetRenderDrawColor (this->m_renderer, R, G, B, alpha); 
       SDL_RenderFillRect     (this->m_renderer, &rect);

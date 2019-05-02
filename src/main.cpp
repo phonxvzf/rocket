@@ -20,6 +20,7 @@ int main() {
       );
 
   main_loop m(window, 800, 800);
+  m.init();
   m.start();
 
   SDL_DestroyWindow(window);

@@ -16,7 +16,7 @@ class main_loop {
 
     // simulator
     static const size_t SIM_SIZE = 200;
-    smoke_sim simulator;
+    smoke_sim* simulator;
     
     void clean_up();
     void keydown_callback(SDL_Scancode scancode);
@@ -24,6 +24,7 @@ class main_loop {
 
   public:
     main_loop(SDL_Window* window, int width, int height);
+    void init();
     void start();
 };
 
