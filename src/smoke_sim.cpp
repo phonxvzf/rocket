@@ -4,10 +4,10 @@
 #include "smoke_sim.hpp"
 
 namespace std {
-	template <class T>
-	constexpr const T& clamp(const T& v, const T& lo, const T& hi) {
-		return std::min<T>(hi, std::max<T>(lo, v));
-	}
+  template <class T>
+  constexpr const T& clamp(const T& v, const T& lo, const T& hi) {
+    return std::min<T>(hi, std::max<T>(lo, v));
+  }
 }
 
 namespace fluid {
@@ -110,15 +110,15 @@ namespace fluid {
 }
 
 float** smoke_sim::get_dens () const noexcept {
-	return this->dens;
+  return this->dens;
 }
 
 float** smoke_sim::get_vec_x () const noexcept {
-	return this->vec_x;
+  return this->vec_x;
 }
 
 float** smoke_sim::get_vec_y () const noexcept {
-	return this->vec_y;
+  return this->vec_y;
 }
 
 smoke_sim* smoke_sim::set_diffuse (float rate) noexcept {
@@ -173,28 +173,28 @@ void smoke_sim::simulate (float dt) {
 }
 
 smoke_sim::smoke_sim (int T) : T(T), diffuse_rate(10), viscosity(10) {
-	tmp_vec_x = new float*[T+1];
-	tmp_vec_y = new float*[T+1];
-	tmp_dens  = new float*[T+1];
-	vec_x     = new float*[T+1];
-	vec_y     = new float*[T+1];
-	dens      = new float*[T+1];
-	for (int i = 0; i < T+1; ++i) {
-		tmp_vec_x[i] = new float[T+1]();
-		tmp_vec_y[i] = new float[T+1]();
-		tmp_dens [i] = new float[T+1]();
-		vec_x    [i] = new float[T+1]();
-		vec_y    [i] = new float[T+1]();
-		dens     [i] = new float[T+1]();
-	}
+  tmp_vec_x = new float*[T+1];
+  tmp_vec_y = new float*[T+1];
+  tmp_dens  = new float*[T+1];
+  vec_x     = new float*[T+1];
+  vec_y     = new float*[T+1];
+  dens      = new float*[T+1];
+  for (int i = 0; i < T+1; ++i) {
+    tmp_vec_x[i] = new float[T+1]();
+    tmp_vec_y[i] = new float[T+1]();
+    tmp_dens [i] = new float[T+1]();
+    vec_x    [i] = new float[T+1]();
+    vec_y    [i] = new float[T+1]();
+    dens     [i] = new float[T+1]();
+  }
 }
 
 smoke_sim::smoke_sim (const smoke_sim& sim) : T(sim.T), diffuse_rate(10), viscosity(10) {
-	this->tmp_vec_x = sim.tmp_vec_x;
-	this->tmp_vec_y = sim.tmp_vec_y;
-	this->tmp_dens  = sim.tmp_dens;
+  this->tmp_vec_x = sim.tmp_vec_x;
+  this->tmp_vec_y = sim.tmp_vec_y;
+  this->tmp_dens  = sim.tmp_dens;
 
-	this->vec_x = sim.vec_x;
-	this->vec_y = sim.vec_y;
-	this->dens  = sim.dens;
+  this->vec_x = sim.vec_x;
+  this->vec_y = sim.vec_y;
+  this->dens  = sim.dens;
 }
