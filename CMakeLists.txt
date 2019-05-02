@@ -14,5 +14,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++14 -ggdb -pipe -Wall")
 
 add_executable(${BINARY} ${SOURCES})
 
+target_compile_definitions(${BINARY} PRIVATE SIM_SIZE=$ENV{SIM_SIZE})
 target_include_directories(${BINARY} PRIVATE include)
 target_link_libraries(${BINARY} SDL2)

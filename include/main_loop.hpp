@@ -5,6 +5,10 @@
 #include <SDL2/SDL.h>
 #include <smoke_sim.hpp>
 
+#ifndef SIM_SIZE
+#define SIM_SIZE 400
+#endif
+
 class main_loop {
   private:
 
@@ -15,7 +19,6 @@ class main_loop {
     SDL_Renderer* m_renderer;
 
     // simulator
-    static const size_t SIM_SIZE = 200;
     smoke_sim* simulator;
     
     void clean_up();
