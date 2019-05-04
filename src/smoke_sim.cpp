@@ -121,6 +121,9 @@ float** smoke_sim::get_vec_y () const noexcept {
   return this->vec_y;
 }
 
+std::pair<int, int> smoke_sim::get_position (float x, float y) const noexcept {
+  return { (int) (x * this->T), (int) (y * this->T) };
+}
 smoke_sim* smoke_sim::set_diffuse (float rate) noexcept {
   this->diffuse_rate = rate;
   return this;

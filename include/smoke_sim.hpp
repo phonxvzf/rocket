@@ -2,6 +2,7 @@
 #define SMOKE_SIM_HPP
 
 #include <cstddef>
+#include <utility>
 
 class smoke_sim {
 
@@ -37,8 +38,10 @@ class smoke_sim {
 
 		void simulate (float dt);
 
-		smoke_sim* set_diffuse  (float rate) noexcept;
+		smoke_sim* set_diffuse   (float rate) noexcept;
 		smoke_sim* set_viscosity (float rate) noexcept;
+
+		std::pair<int, int> get_position (float x, float y) const noexcept;
 
 		// constructors
 		smoke_sim (int T);

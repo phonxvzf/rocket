@@ -3,7 +3,11 @@
 
 #include <cinttypes>
 #include <SDL2/SDL.h>
-#include <smoke_sim.hpp>
+
+#include <vector>
+
+#include "smoke_sim.hpp"
+#include "object/object.hpp"
 
 #ifndef SIM_SIZE
 #define SIM_SIZE 400
@@ -18,8 +22,11 @@ class main_loop {
     bool m_continue_loop = true;
     SDL_Renderer* m_renderer;
 
+    // object list
+    std::vector<object*> objs;
+
     // simulator
-    smoke_sim* simulator;
+    smoke_sim* smoke;
     
     void clean_up();
     void keydown_callback(SDL_Scancode scancode);
