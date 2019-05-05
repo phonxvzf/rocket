@@ -3,6 +3,7 @@
 
 #include "main_loop.hpp"
 #include "object/rocket.hpp"
+#include "object/globe.hpp"
 
 main_loop::main_loop(SDL_Window *window, int width, int height)
   : m_window_width   (width), 
@@ -28,6 +29,12 @@ main_loop::main_loop(SDL_Window *window, int width, int height)
 }
 
 void main_loop::clean_up() {
+  
+  for (object* obj : this->objs) {
+    delete obj;
+  }
+  delete this->smoke;
+
   SDL_DestroyRenderer(m_renderer);
 }
 
@@ -45,8 +52,12 @@ void main_loop::keydown_callback(SDL_Scancode scancode) {
 void main_loop::init() {
 
   // create a rocket
-  object* obj = dynamic_cast<object*> (new rocket(0.5, 1.0));
-  this->objs.emplace_back(obj);
+  object* rocket = dynamic_cast<object*> (new model::rocket(0.5, 0.3));
+  this->objs.emplace_back (rocket);
+
+  // create a globe
+  object* globe  = dynamic_cast<object*> (new model::globe(0.5, 0.5, 0.2));
+  this->objs.emplace_back (globe);
 
   // set fluid configuration
   this->smoke
@@ -70,9 +81,11 @@ void main_loop::draw(uint32_t dt) {
 
   // simulate the model
 
+  const model::rocket* rock = dynamic_cast<model::rocket*> (this->objs[0]);
+  
   std::pair<int, int> rocket_pos_in_smoke = this->smoke->get_position(
-    this->objs[0]->get_x(),
-    this->objs[0]->get_y()
+    rock->get_x(),
+    rock->get_y()
   );
 
   this->smoke->get_dens()

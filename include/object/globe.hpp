@@ -1,15 +1,15 @@
-#ifndef OBJECT_ROCKET_HPP
-#define OBJECT_ROCKET_HPP
+#ifndef OBJECT_GLOBE_HPP
+#define OBJECT_GLOBE_HPP
 
 #include "object/object.hpp"
 
 namespace model {
-  class rocket : public object {
+  
+  class globe : public object {
 
     protected:
-      float x, y;
-      float vx, vy;
-      float t;
+      const float x, y, r;
+      float ang;
 
     public:
 
@@ -20,12 +20,7 @@ namespace model {
       float get_x  () const noexcept { return x;  }
       float get_y  () const noexcept { return y;  }
 
-
-      float get_vx () { return vx; }
-      float get_vy () { return vy; }
-      rocket* set_position (float x, float y);
-
-      rocket (float x, float y);
+      globe (float x, float y, float r);
   };
 }
 
