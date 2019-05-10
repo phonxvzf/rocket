@@ -9,6 +9,10 @@
 #define SIM_SIZE 400
 #endif
 
+#ifndef DT
+#define DT 33.333333f
+#endif
+
 class main_loop {
   private:
 
@@ -22,8 +26,8 @@ class main_loop {
     smoke_sim* simulator;
     
     void clean_up();
-    void keydown_callback(SDL_Scancode scancode);
-    void draw(uint32_t dt);
+    void keydown_callback(const SDL_Scancode scancode);
+    void draw(float dt);
 
   public:
     main_loop(SDL_Window* window, int width, int height);

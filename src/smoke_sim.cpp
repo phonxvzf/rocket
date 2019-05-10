@@ -28,60 +28,28 @@ namespace fluid {
 
     for (int i = 0; i < T; ++i) {
       for (int j = 0; j < T; ++j) {
-        // float cx = i + 0.5f, cy = j + 0.5f;
-        
-        // float cu = (u[i][j] + u[i+1][j]) / 2.0;
-        // float cv = (v[i][j] + v[i][j+1]) / 2.0;
-
-        // float px = trace_position (T, cx, cu, -dt);
-        // float py = trace_position (T, cx, cv, -dt);
-
-        // int i0   = (int) floor(px - 0.5f);
-        // int i1   = i0 + 1;
-        // int j0   = (int) floor(py - 0.5f);
-        // int j1   = j0 + 1;
-
-        // float s1 =   px - i0 - 0.5f;
-        // float s0 = 1.0f - s1;
-        // float t1 =   py - j0 - 0.5f;
-        // float t0 = 1.0f - t1;
-
-        // x[i][j]  = (valid(T, i0) && valid(T, j0) ? s0 * t0 * x0[i0][j0] : 0.0f) 
-        //          + (valid(T, i0) && valid(T, j1) ? s0 * t1 * x0[i0][j1] : 0.0f)
-        //         + (valid(T, i1) && valid(T, j0) ? s1 * t0 * x0[i1][j0] : 0.0f)
-        //         + (valid(T, i1) && valid(T, j1) ? s1 * t1 * x0[i1][j1] : 0.0f);
-        x[i][j] = 0;
-      }
-    }
-
-    for (int i = 0; i < T; ++i) {
-      for (int j = 0; j < T; ++j) {
         float cx = i + 0.5f, cy = j + 0.5f;
         
         float cu = (u[i][j] + u[i+1][j]) / 2.0;
         float cv = (v[i][j] + v[i][j+1]) / 2.0;
 
-        float px = trace_position  (T, cx, cu, dt);
-        float py = trace_position  (T, cy, cv, dt);
+        float px = trace_position (T, cx, cu, -dt);
+        float py = trace_position (T, cy, cv, -dt);
 
-        int i0 = std::clamp((int) floor (px - 0.5f), 0, T-1);
-        int i1 = std::clamp(i0 + 1, 0, T-1);
-        int j0 = std::clamp((int) floor (py - 0.5f), 0, T-1);
-        int j1 = std::clamp(j0 + 1, 0, T-1);
+        int i0   = (int) floor(px - 0.5f);
+        int i1   = i0 + 1;
+        int j0   = (int) floor(py - 0.5f);
+        int j1   = j0 + 1;
 
         float s1 =   px - i0 - 0.5f;
         float s0 = 1.0f - s1;
         float t1 =   py - j0 - 0.5f;
         float t0 = 1.0f - t1;
 
-        if (valid(T, i0) && valid(T, j0))
-          x[i0][j0] += x0[i][j] * s0 * t0;
-        if (valid(T, i0) && valid(T, j1))
-          x[i0][j1] += x0[i][j] * s0 * t1;
-        if (valid(T, i1) && valid(T, j0))
-          x[i1][j0] += x0[i][j] * s1 * t0;
-        if (valid(T, i1) && valid(T, j1))
-          x[i1][j1] += x0[i][j] * s1 * t1;
+        x[i][j]  =  (valid(T, i0) && valid(T, j0) ? s0 * t0 * x0[i0][j0] : 0.0f) 
+                  + (valid(T, i0) && valid(T, j1) ? s0 * t1 * x0[i0][j1] : 0.0f)
+                  + (valid(T, i1) && valid(T, j0) ? s1 * t0 * x0[i1][j0] : 0.0f)
+                  + (valid(T, i1) && valid(T, j1) ? s1 * t1 * x0[i1][j1] : 0.0f);
       }
     }
   }
@@ -149,6 +117,7 @@ void smoke_sim::evolve_vec  (float dt) {
 
 void smoke_sim::evolve_dens (float dt) {
   // body_force (dt);
+  // TODO
 
   fluid::advect   (this->T, this->tmp_dens, this->dens, this->vec_x, this->vec_y, dt);
   std::swap       (this->tmp_dens, this->dens);
@@ -157,6 +126,7 @@ void smoke_sim::evolve_dens (float dt) {
   std::swap       (this->tmp_dens, this->dens);
   
   // pressure   (dt);
+  // TODO
 }
 
 void smoke_sim::project () {
