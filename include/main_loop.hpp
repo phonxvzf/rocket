@@ -15,24 +15,23 @@
 
 class main_loop {
   private:
+    int       m_window_width;
+    int       m_window_height;
+    uint32_t  m_loop_tick_start;
+    bool      m_continue_loop = true;
+    bool      m_show_pressure = false;
 
-    int m_window_width;
-    int m_window_height;
-    uint32_t m_loop_tick_start;
-    bool m_continue_loop = true;
     SDL_Renderer* m_renderer;
-
-    // simulator
-    smoke_sim* simulator;
+    smoke_sim*    simulator;
     
-    void clean_up();
-    void keydown_callback(const SDL_Scancode scancode);
-    void draw(float dt);
+    void clean_up         ();
+    void keydown_callback (const SDL_Scancode scancode);
+    void draw             (float dt);
 
   public:
-    main_loop(SDL_Window* window, int width, int height);
-    void init();
-    void start();
+    main_loop   (SDL_Window* window, int width, int height);
+    void init   ();
+    void start  ();
 };
 
 #endif /* MAIN_LOOP_HPP */

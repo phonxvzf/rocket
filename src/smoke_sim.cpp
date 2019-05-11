@@ -1,5 +1,6 @@
 #include <cmath>
 #include <algorithm>
+#include <iostream>
 
 #include "smoke_sim.hpp"
 
@@ -11,6 +12,8 @@ namespace std {
 }
 
 namespace fluid {
+
+  static const float MAX_VELOCITY = 20.0f;
 
   inline float trace_position (float T, float cx, float v, float dt) {
     float x = cx + v * dt;
@@ -57,28 +60,71 @@ namespace fluid {
   void diffuse (int T, float** x, float** x0, float k, float dt) {
     static const int iteration = 20;
 
-    const float a = k * dt;
-
-    // solve the linear system using Gauss-Seidel method
+    const float coef = -k * dt;
     for (int it = 0; it < iteration; ++it) {
       for (int i = 0; i < T; ++i) {
         for (int j = 0; j < T; ++j) {
-          const int neighbor = (i > 0) + (i < T-1) + (j > 0) + (j < T-1);
-
-          x[i][j] = (x0[i][j] + a * (
-            (i+1 < T ? x[i+1][j] : 0) + 
-            (i   > 0 ? x[i-1][j] : 0) + 
-            (j+1 < T ? x[i][j+1] : 0) + 
-            (j   > 0 ? x[i][j-1] : 0) )
-          ) / (1 + neighbor * a);
+          x[i][j] = (x0[i][j] - (
+                (i   > 0 ? coef * x[i-1][j] : 0) +
+                (i+1 < T ? coef * x[i+1][j] : 0) +
+                (j   > 0 ? coef * x[i][j-1] : 0) +
+                (j+1 < T ? coef * x[i][j+1] : 0)
+                )) / (1 - 4 * coef);
         }
       }
     }
   }
+
+  void pressure(int T, float** p, float** w_x, float** w_y, float** w_x0, float** w_y0, float density) {
+    // calculate gradient of scalar field p using Gauss-Seidel method
+    static const int iteration = 30;
+
+    for (int it = 0; it < iteration; ++it) {
+      for (int i = 0; i < T; ++i) {
+        for (int j = 0; j < T; ++j) {
+          const float div_w = (w_x0[i+1][j] - w_x0[i][j]) + (w_y0[i][j+1] - w_y0[i][j]);
+
+          p[i][j] = (density * div_w - (
+                (i   > 0 ? p[i-1][j] : 0) +
+                (i+1 < T ? p[i+1][j] : 0) +
+                (j   > 0 ? p[i][j-1] : 0) +
+                (j+1 < T ? p[i][j+1] : 0)
+                )) / -4.0f;
+        }
+      }
+    }
+
+    for (int i = 0; i < T; ++i) {
+      for (int j = 0; j < T; ++j) {
+        // update velocity field according to Helmholtz-Hodge decomposition
+        if (i+1 < T) w_x[i][j] = w_x0[i][j] - (p[i+1][j] - p[i][j]) * density;
+        if (j+1 < T) w_y[i][j] = w_y0[i][j] - (p[i][j+1] - p[i][j]) * density;
+      }
+    }
+  }
+
+  void body_force(
+      int T,
+      float** u,
+      float** u0,
+      float** force,
+      float dt)
+  {
+    for (int i = 0; i < T; ++i) {
+      for (int j = 0; j < T; ++j) {
+        u[i][j] = std::min(u0[i][j] + force[i][j] * dt, MAX_VELOCITY);
+      }
+    }
+  }
+
 }
 
 float** smoke_sim::get_dens () const noexcept {
   return this->dens;
+}
+
+float** smoke_sim::get_pressure () const noexcept {
+  return this->pressure;
 }
 
 float** smoke_sim::get_vec_x () const noexcept {
@@ -87,6 +133,14 @@ float** smoke_sim::get_vec_x () const noexcept {
 
 float** smoke_sim::get_vec_y () const noexcept {
   return this->vec_y;
+}
+
+float** smoke_sim::get_force_x () const noexcept {
+  return this->force_x;
+}
+
+float** smoke_sim::get_force_y () const noexcept {
+  return this->force_y;
 }
 
 smoke_sim* smoke_sim::set_diffuse (float rate) noexcept {
@@ -99,42 +153,49 @@ smoke_sim* smoke_sim::set_viscosity (float rate) noexcept {
   return this;
 }
 
+smoke_sim* smoke_sim::set_density (float density) noexcept {
+  this->density = density;
+  return this;
+}
+
 void smoke_sim::evolve_vec  (float dt) {
 
-  fluid::diffuse  (this->T, this->tmp_vec_x, this->vec_x, this->viscosity, dt);
-  std::swap       (this->tmp_vec_x, this->vec_x);
+  fluid::advect     (this->T, this->tmp_vec_x, this->vec_x, this->vec_x, this->vec_y, dt);
+  fluid::advect     (this->T, this->tmp_vec_y, this->vec_y, this->vec_x, this->vec_y, dt);
+  std::swap         (this->tmp_vec_x, this->vec_x);
+  std::swap         (this->tmp_vec_y, this->vec_y);
 
-  fluid::diffuse  (this->T, this->tmp_vec_y, this->vec_y, this->viscosity, dt);
-  std::swap       (this->tmp_vec_y, this->vec_y);
+  fluid::body_force (this->T, this->tmp_vec_x, this->vec_x, this->force_x, dt);
+  fluid::body_force (this->T, this->tmp_vec_y, this->vec_y, this->force_y, dt);
+  std::swap         (this->tmp_vec_x, this->vec_x);
+  std::swap         (this->tmp_vec_y, this->vec_y);
 
-  this->project();
+  fluid::diffuse    (this->T, this->tmp_vec_x, this->vec_x, this->viscosity, dt);
+  fluid::diffuse    (this->T, this->tmp_vec_y, this->vec_y, this->viscosity, dt);
+  std::swap         (this->tmp_vec_x, this->vec_x);
+  std::swap         (this->tmp_vec_y, this->vec_y);
 
-  fluid::advect   (this->T, this->tmp_vec_x, this->vec_x, this->vec_x, this->vec_y, dt);
-  fluid::advect   (this->T, this->tmp_vec_y, this->vec_y, this->vec_x, this->vec_y, dt);
-
-  this->project();
+  // enforce divergence free of velocity field
+  // pressure is solved as a by-product
+  fluid::pressure   (
+      this->T,
+      this->pressure,
+      this->tmp_vec_x,
+      this->tmp_vec_y,
+      this->vec_x,
+      this->vec_y,
+      this->density
+      );
+  std::swap         (this->tmp_vec_x, this->vec_x);
+  std::swap         (this->tmp_vec_y, this->vec_y);
 }
 
 void smoke_sim::evolve_dens (float dt) {
-  // body_force (dt);
-  // TODO
-
   fluid::advect   (this->T, this->tmp_dens, this->dens, this->vec_x, this->vec_y, dt);
   std::swap       (this->tmp_dens, this->dens);
 
   fluid::diffuse  (this->T, this->tmp_dens, this->dens, this->diffuse_rate, dt);
   std::swap       (this->tmp_dens, this->dens);
-  
-  // pressure   (dt);
-  // TODO
-}
-
-void smoke_sim::project () {
-  for (int i = 0; i < this->T; ++i) {
-    for (int j = 0; j < this->T; ++j) {
-      // div[i][j] = -0.5 * h, 
-    }
-  }
 }
 
 void smoke_sim::simulate (float dt) {
@@ -149,6 +210,9 @@ smoke_sim::smoke_sim (int T) : T(T), diffuse_rate(10), viscosity(10) {
   vec_x     = new float*[T+1];
   vec_y     = new float*[T+1];
   dens      = new float*[T+1];
+  pressure  = new float*[T+1];
+  force_x   = new float*[T+1];
+  force_y   = new float*[T+1];
   for (int i = 0; i < T+1; ++i) {
     tmp_vec_x[i] = new float[T+1]();
     tmp_vec_y[i] = new float[T+1]();
@@ -156,6 +220,9 @@ smoke_sim::smoke_sim (int T) : T(T), diffuse_rate(10), viscosity(10) {
     vec_x    [i] = new float[T+1]();
     vec_y    [i] = new float[T+1]();
     dens     [i] = new float[T+1]();
+    pressure [i] = new float[T+1]();
+    force_x  [i] = new float[T+1]();
+    force_y  [i] = new float[T+1]();
   }
 }
 
@@ -167,4 +234,5 @@ smoke_sim::smoke_sim (const smoke_sim& sim) : T(sim.T), diffuse_rate(10), viscos
   this->vec_x = sim.vec_x;
   this->vec_y = sim.vec_y;
   this->dens  = sim.dens;
+  this->pressure = sim.pressure;
 }

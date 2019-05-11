@@ -10,7 +10,7 @@ file(GLOB SOURCES "src/*.cpp")
 set(BINARY rocket)
 
 # Compilatlon
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++14 -ggdb -pipe -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++14 -march=native -O2 -ffast-math -ggdb -pipe -Wall")
 
 add_executable(${BINARY} ${SOURCES})
 
