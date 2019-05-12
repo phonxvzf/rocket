@@ -5,7 +5,6 @@
 
 #include "main_loop.hpp"
 #include "object/rocket.hpp"
-
 namespace util {
   void interpolate_color(double p, double min_p, double max_p, uint8_t* r, uint8_t* g, uint8_t* b) {
     const double h = std::max(0.0, 6 - ((p - min_p) / (max_p - min_p) * 6 + 1));
@@ -62,6 +61,12 @@ main_loop::main_loop(SDL_Window *window, int width, int height)
 }
 
 void main_loop::clean_up() {
+  
+  for (object* obj : this->objs) {
+    delete obj;
+  }
+  delete this->smoke;
+
   SDL_DestroyRenderer(m_renderer);
 }
 
@@ -118,6 +123,7 @@ void main_loop::draw(double dt) {
   static const int B = 0xBB;
 
   // simulate the model
+<<<<<<< HEAD
   if (!m_pause) {
 
     // add smoke from the rocket
@@ -137,6 +143,24 @@ void main_loop::draw(double dt) {
     }
 
     this->smoke->simulate(dt / 100.0);
+=======
+
+  const model::rocket* rock = dynamic_cast<model::rocket*> (this->objs[0]);
+  
+  std::pair<int, int> rocket_pos_in_smoke = this->smoke->get_position(
+    rock->get_x(),
+    rock->get_y()
+  );
+
+  this->smoke->get_dens()
+    [rocket_pos_in_smoke.first]
+    [rocket_pos_in_smoke.second] += 10;
+
+  this->smoke->simulate(dt / 100.0);
+
+  for (object* obj : this->objs) {
+    obj->simulate(dt);
+>>>>>>> ac56a44be4409ad83996a6b8e444fb2f5d722335
   }
 
   // fill background

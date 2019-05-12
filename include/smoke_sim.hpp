@@ -44,9 +44,16 @@ class smoke_sim {
 
     void simulate (double dt);
 
+<<<<<<< HEAD
   	smoke_sim* set_diffuse   (float rate) noexcept;
   	smoke_sim* set_viscosity (float rate) noexcept;
     smoke_sim* set_density    (double density) noexcept;
+
+		std::pair<int, int> get_position (float x, float y) const noexcept;
+=======
+		smoke_sim* set_diffuse   (float rate) noexcept;
+		smoke_sim* set_viscosity (float rate) noexcept;
+>>>>>>> ac56a44be4409ad83996a6b8e444fb2f5d722335
 
 		std::pair<int, int> get_position (float x, float y) const noexcept;
 
