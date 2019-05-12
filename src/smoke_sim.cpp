@@ -145,12 +145,16 @@ double** smoke_sim::get_force_y () const noexcept {
   return this->force_y;
 }
 
-smoke_sim* smoke_sim::set_diffuse (double rate) noexcept {
+std::pair<int, int> smoke_sim::get_position (float x, float y) const noexcept {
+  return { (int) (x * this->T), (int) (y * this->T) };
+}
+
+smoke_sim* smoke_sim::set_diffuse (float rate) noexcept {
   this->diffuse_rate = rate;
   return this;
 }
 
-smoke_sim* smoke_sim::set_viscosity (double rate) noexcept {
+smoke_sim* smoke_sim::set_viscosity (float rate) noexcept {
   this->viscosity = rate;
   return this;
 }

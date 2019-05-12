@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "main_loop.hpp"
+#include "object/rocket.hpp"
 
 namespace util {
   void interpolate_color(double p, double min_p, double max_p, uint8_t* r, uint8_t* g, uint8_t* b) {
@@ -40,10 +41,15 @@ namespace util {
 }
 
 main_loop::main_loop(SDL_Window *window, int width, int height)
-  : m_window_width(width), m_window_height(height),
+  : m_window_width   (width), 
+    m_window_height  (height),
 
-    // init simulator
-    simulator(new smoke_sim(SIM_SIZE))
+    // init object list
+    objs  (),
+
+    // init smoke simulator
+    smoke (new smoke_sim(SIM_SIZE))
+
 {
   m_renderer = SDL_CreateRenderer(
       window,
@@ -76,8 +82,12 @@ void main_loop::keydown_callback(const SDL_Scancode scancode) {
 
 void main_loop::init() {
 
+  // create a rocket
+  object* obj = dynamic_cast<object*> (new rocket(0.5, 1.0));
+  this->objs.emplace_back(obj);
+
   // set fluid configuration
-  this->simulator
+  this->smoke
     ->set_diffuse   (2)
     ->set_viscosity (0.0)
     ->set_density   (1e-32);
@@ -85,18 +95,18 @@ void main_loop::init() {
   // set pressure
   for (int i = 0; i <= (int) SIM_SIZE; ++i) {
     for (int j = 0; j <= (int) SIM_SIZE; ++j) {
-      this->simulator->get_pressure()[i][j] = 0.0f;
+      this->smoke->get_pressure()[i][j] = 0.0f;
     }
   }
   
   // set gravity
   for (int i = 0; i < (int) SIM_SIZE; ++i) {
     for (int j = 0; j < (int) SIM_SIZE; ++j) {
-      this->simulator->get_vec_x()[i][j]    = 0.0;
-      this->simulator->get_vec_y()[i][j]    = 0.0;
+      this->smoke->get_vec_x()[i][j]    = 0.0;
+      this->smoke->get_vec_y()[i][j]    = 0.0;
 
-      this->simulator->get_force_x()[i][j]  = 0.0;
-      this->simulator->get_force_y()[i][j]  = 0.1;
+      this->smoke->get_force_x()[i][j]  = 0.0;
+      this->smoke->get_force_y()[i][j]  = 0.1;
     }
   }
 }
@@ -108,17 +118,28 @@ void main_loop::draw(double dt) {
   static const int B = 0xBB;
 
   // simulate the model
-  static int rocket_x = SIM_SIZE / 2 - 20, rocket_y = SIM_SIZE / 2;
-  // rocket_x = (rocket_x + SIM_SIZE - 1) % SIM_SIZE;
-  // rocket_y = (rocket_y + SIM_SIZE - 1) % SIM_SIZE;
-
   if (!m_pause) {
-    this->simulator->get_dens()[rocket_x][rocket_y]       += 10;
-    this->simulator->get_dens()[rocket_x + 40][rocket_y]  += 10;
-    this->simulator->simulate(dt / 100.0);
-  }
+    std::pair<int, int> rocket_pos_in_smoke = this->smoke->get_position(
+      this->objs[0]->get_x(),
+      this->objs[0]->get_y()
+    );
 
-  // render the image
+    this->smoke->get_dens()
+      [rocket_pos_in_smoke.first]
+      [rocket_pos_in_smoke.second] += 10;
+
+    this->smoke->simulate(dt / 100.0);
+
+    for (object* obj : this->objs) {
+      obj->simulate(dt);
+    }
+  }
+  // fill background
+  const SDL_Rect window_rect = { 0, 0, m_window_width, m_window_height };
+  SDL_SetRenderDrawColor (this->m_renderer, 0x00, 0x00, 0x00, 0xFF);
+  SDL_RenderFillRect     (this->m_renderer, &window_rect);
+
+  // render the smoke
   const size_t  size_x = this->m_window_width  / SIM_SIZE;
   const size_t  pad_x  = this->m_window_width  % SIM_SIZE; 
   const size_t  size_y = this->m_window_height / SIM_SIZE; 
@@ -132,11 +153,16 @@ void main_loop::draw(double dt) {
 
       // draw density
       SDL_Rect rect {x, y, (int) size_x + (i < pad_x), (int) size_y + (j < pad_y)};
-      const uint8_t alpha = std::min(255, (int) floor(this->simulator->get_dens()[i][j] * 255));
+      const uint8_t alpha = std::min(255, (int) floor(this->smoke->get_dens()[i][j] * 256));
 
       SDL_SetRenderDrawColor (this->m_renderer, R, G, B, alpha); 
       SDL_RenderFillRect     (this->m_renderer, &rect);
     }
+  }
+
+  // render the objects
+  for (object* obj : this->objs) {
+    obj->draw(m_window_width, m_window_height, this->m_renderer);
   }
 }
 
