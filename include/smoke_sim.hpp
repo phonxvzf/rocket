@@ -9,43 +9,43 @@ class smoke_sim {
 
     const int T;
 
-    float   diffuse_rate;
-    float   viscosity;
-    float   density;
+    double   diffuse_rate;
+    double   viscosity;
+    double   density;
 
-    float** tmp_vec_x;
-    float** tmp_vec_y;
-    float** tmp_dens;
+    double** tmp_vec_x;
+    double** tmp_vec_y;
+    double** tmp_dens;
 
-    float** vec_x;
-    float** vec_y;
-    float** dens;
-    float** pressure;
-    float** force_x;
-    float** force_y;
+    double** vec_x;
+    double** vec_y;
+    double** dens;
+    double** pressure;
+    double** force_x;
+    double** force_y;
 
     // overridable 
     virtual void evolve_vec_x () {};
     virtual void evolve_vec_y () {};
     virtual void evolve_dens  () {};
 
-    void evolve_vec  (float dt);
-    void evolve_dens (float dt);
+    void evolve_vec  (double dt);
+    void evolve_dens (double dt);
 
   public:
 
-    float** get_dens     () const noexcept;
-    float** get_pressure () const noexcept;
-    float** get_vec_x    () const noexcept;
-    float** get_vec_y    () const noexcept;
-    float** get_force_x  () const noexcept;
-    float** get_force_y  () const noexcept;
+    double** get_dens     () const noexcept;
+    double** get_pressure () const noexcept;
+    double** get_vec_x    () const noexcept;
+    double** get_vec_y    () const noexcept;
+    double** get_force_x  () const noexcept;
+    double** get_force_y  () const noexcept;
 
-    void simulate (float dt);
+    void simulate (double dt);
 
-    smoke_sim* set_diffuse    (float rate)    noexcept;
-    smoke_sim* set_viscosity  (float rate)    noexcept;
-    smoke_sim* set_density    (float density) noexcept;
+    smoke_sim* set_diffuse    (double rate)    noexcept;
+    smoke_sim* set_viscosity  (double rate)    noexcept;
+    smoke_sim* set_density    (double density) noexcept;
 
     // constructors
     smoke_sim (int T);

@@ -13,10 +13,10 @@ namespace std {
 
 namespace fluid {
 
-  static const float MAX_VELOCITY = 20.0f;
+  static const double MAX_VELOCITY = 5000000.0;
 
-  inline float trace_position (float T, float cx, float v, float dt) {
-    float x = cx + v * dt;
+  inline double trace_position (double T, double cx, double v, double dt) {
+    double x = cx + v * dt;
     while (0 > x || x > T) {
       if (0 > x) x = - x;
       if (x > T) x = 2 * T - x;
@@ -24,72 +24,74 @@ namespace fluid {
     return x;
   }
 
-  inline bool valid(int T, int i) { return 0 <= i && i < T; }
+  inline bool valid(int T, int i) { return 0 < i && i < T; }
 
   // fluid advection
-  void advect (int T, float** x, float** x0, float** u, float** v, float dt) {
+  void advect (int T, double** x, double** x0, double** u, double** v, double dt) {
 
-    for (int i = 0; i < T; ++i) {
-      for (int j = 0; j < T; ++j) {
-        float cx = i + 0.5f, cy = j + 0.5f;
+    for (int i = 1; i < T; ++i) {
+      for (int j = 1; j < T; ++j) {
+        double cx = i + 0.5f, cy = j + 0.5f;
         
-        float cu = (u[i][j] + u[i+1][j]) / 2.0;
-        float cv = (v[i][j] + v[i][j+1]) / 2.0;
+        double cu = (u[i][j] + u[i+1][j]) / 2.0;
+        double cv = (v[i][j] + v[i][j+1]) / 2.0;
 
-        float px = trace_position (T, cx, cu, -dt);
-        float py = trace_position (T, cy, cv, -dt);
+        double px = trace_position (T, cx, cu, -dt);
+        double py = trace_position (T, cy, cv, -dt);
 
         int i0   = (int) floor(px - 0.5f);
         int i1   = i0 + 1;
         int j0   = (int) floor(py - 0.5f);
         int j1   = j0 + 1;
 
-        float s1 =   px - i0 - 0.5f;
-        float s0 = 1.0f - s1;
-        float t1 =   py - j0 - 0.5f;
-        float t0 = 1.0f - t1;
+        double s1 =   px - i0 - 0.5;
+        double s0 = 1.0 - s1;
+        double t1 =   py - j0 - 0.5;
+        double t0 = 1.0 - t1;
 
-        x[i][j]  =  (valid(T, i0) && valid(T, j0) ? s0 * t0 * x0[i0][j0] : 0.0f) 
-                  + (valid(T, i0) && valid(T, j1) ? s0 * t1 * x0[i0][j1] : 0.0f)
-                  + (valid(T, i1) && valid(T, j0) ? s1 * t0 * x0[i1][j0] : 0.0f)
-                  + (valid(T, i1) && valid(T, j1) ? s1 * t1 * x0[i1][j1] : 0.0f);
+        x[i][j]  =  (valid(T, i0) && valid(T, j0) ? s0 * t0 * x0[i0][j0] : 0.0) 
+                  + (valid(T, i0) && valid(T, j1) ? s0 * t1 * x0[i0][j1] : 0.0)
+                  + (valid(T, i1) && valid(T, j0) ? s1 * t0 * x0[i1][j0] : 0.0)
+                  + (valid(T, i1) && valid(T, j1) ? s1 * t1 * x0[i1][j1] : 0.0);
       }
     }
   }
 
-  void diffuse (int T, float** x, float** x0, float k, float dt) {
+  void diffuse (int T, double** x, double** x0, double k, double dt) {
     static const int iteration = 20;
 
-    const float coef = -k * dt;
+    const double coef = -k * dt;
     for (int it = 0; it < iteration; ++it) {
       for (int i = 0; i < T; ++i) {
         for (int j = 0; j < T; ++j) {
-          x[i][j] = (x0[i][j] - (
-                (i   > 0 ? coef * x[i-1][j] : 0) +
-                (i+1 < T ? coef * x[i+1][j] : 0) +
-                (j   > 0 ? coef * x[i][j-1] : 0) +
-                (j+1 < T ? coef * x[i][j+1] : 0)
-                )) / (1 - 4 * coef);
+          const int bound = (i == 0) + (i+1 == T) + (j == 0) + (j+1 == T);
+          x[i][j] = (x0[i][j] - coef * (
+                (i   > 0 ? x[i-1][j] : 0.0) +
+                (i+1 < T ? x[i+1][j] : 0.0) +
+                (j   > 0 ? x[i][j-1] : 0.0) +
+                (j+1 < T ? x[i][j+1] : 0.0)
+                )) / (1 - 4 * coef + bound);
         }
       }
     }
   }
 
-  void pressure(int T, float** p, float** w_x, float** w_y, float** w_x0, float** w_y0, float density) {
+  void pressure(int T, double** p, double** w_x, double** w_y, double** w_x0, double** w_y0, double density) {
     // calculate gradient of scalar field p using Gauss-Seidel method
-    static const int iteration = 30;
+    static const int iteration = 20;
 
     for (int it = 0; it < iteration; ++it) {
       for (int i = 0; i < T; ++i) {
         for (int j = 0; j < T; ++j) {
-          const float div_w = (w_x0[i+1][j] - w_x0[i][j]) + (w_y0[i][j+1] - w_y0[i][j]);
-
+          // Neumann boundary condition will transform each affected neighbour to p[i][j]
+          const double div_w = (w_x0[i+1][j] - w_x0[i][j]) + (w_y0[i][j+1] - w_y0[i][j]);
+          const int bound = (i == 0) + (i+1 == T) + (j == 0) + (j+1 == T);
           p[i][j] = (density * div_w - (
-                (i   > 0 ? p[i-1][j] : 0) +
-                (i+1 < T ? p[i+1][j] : 0) +
-                (j   > 0 ? p[i][j-1] : 0) +
-                (j+1 < T ? p[i][j+1] : 0)
-                )) / -4.0f;
+                (i   > 0 ? p[i-1][j] : 0.0) +
+                (i+1 < T ? p[i+1][j] : 0.0) +
+                (j   > 0 ? p[i][j-1] : 0.0) +
+                (j+1 < T ? p[i][j+1] : 0.0)
+                )) / (-4.0f + bound);
         }
       }
     }
@@ -97,68 +99,68 @@ namespace fluid {
     for (int i = 0; i < T; ++i) {
       for (int j = 0; j < T; ++j) {
         // update velocity field according to Helmholtz-Hodge decomposition
-        if (i+1 < T) w_x[i][j] = w_x0[i][j] - (p[i+1][j] - p[i][j]) * density;
-        if (j+1 < T) w_y[i][j] = w_y0[i][j] - (p[i][j+1] - p[i][j]) * density;
+        w_x[i][j] = std::clamp(w_x0[i][j] - (p[i+1][j] - p[i][j]) / density, -MAX_VELOCITY, MAX_VELOCITY);
+        w_y[i][j] = std::clamp(w_y0[i][j] - (p[i][j+1] - p[i][j]) / density, -MAX_VELOCITY, MAX_VELOCITY);
       }
     }
   }
 
   void body_force(
       int T,
-      float** u,
-      float** u0,
-      float** force,
-      float dt)
+      double** u,
+      double** u0,
+      double** force,
+      double dt)
   {
     for (int i = 0; i < T; ++i) {
       for (int j = 0; j < T; ++j) {
-        u[i][j] = std::min(u0[i][j] + force[i][j] * dt, MAX_VELOCITY);
+        u[i][j] = u0[i][j] + force[i][j] * dt;
       }
     }
   }
 
 }
 
-float** smoke_sim::get_dens () const noexcept {
+double** smoke_sim::get_dens () const noexcept {
   return this->dens;
 }
 
-float** smoke_sim::get_pressure () const noexcept {
+double** smoke_sim::get_pressure () const noexcept {
   return this->pressure;
 }
 
-float** smoke_sim::get_vec_x () const noexcept {
+double** smoke_sim::get_vec_x () const noexcept {
   return this->vec_x;
 }
 
-float** smoke_sim::get_vec_y () const noexcept {
+double** smoke_sim::get_vec_y () const noexcept {
   return this->vec_y;
 }
 
-float** smoke_sim::get_force_x () const noexcept {
+double** smoke_sim::get_force_x () const noexcept {
   return this->force_x;
 }
 
-float** smoke_sim::get_force_y () const noexcept {
+double** smoke_sim::get_force_y () const noexcept {
   return this->force_y;
 }
 
-smoke_sim* smoke_sim::set_diffuse (float rate) noexcept {
+smoke_sim* smoke_sim::set_diffuse (double rate) noexcept {
   this->diffuse_rate = rate;
   return this;
 }
 
-smoke_sim* smoke_sim::set_viscosity (float rate) noexcept {
+smoke_sim* smoke_sim::set_viscosity (double rate) noexcept {
   this->viscosity = rate;
   return this;
 }
 
-smoke_sim* smoke_sim::set_density (float density) noexcept {
+smoke_sim* smoke_sim::set_density (double density) noexcept {
   this->density = density;
   return this;
 }
 
-void smoke_sim::evolve_vec  (float dt) {
+void smoke_sim::evolve_vec  (double dt) {
 
   fluid::advect     (this->T, this->tmp_vec_x, this->vec_x, this->vec_x, this->vec_y, dt);
   fluid::advect     (this->T, this->tmp_vec_y, this->vec_y, this->vec_x, this->vec_y, dt);
@@ -190,7 +192,7 @@ void smoke_sim::evolve_vec  (float dt) {
   std::swap         (this->tmp_vec_y, this->vec_y);
 }
 
-void smoke_sim::evolve_dens (float dt) {
+void smoke_sim::evolve_dens (double dt) {
   fluid::advect   (this->T, this->tmp_dens, this->dens, this->vec_x, this->vec_y, dt);
   std::swap       (this->tmp_dens, this->dens);
 
@@ -198,31 +200,31 @@ void smoke_sim::evolve_dens (float dt) {
   std::swap       (this->tmp_dens, this->dens);
 }
 
-void smoke_sim::simulate (float dt) {
+void smoke_sim::simulate (double dt) {
   this->evolve_vec  (dt);
   this->evolve_dens (dt);
 }
 
 smoke_sim::smoke_sim (int T) : T(T), diffuse_rate(10), viscosity(10) {
-  tmp_vec_x = new float*[T+1];
-  tmp_vec_y = new float*[T+1];
-  tmp_dens  = new float*[T+1];
-  vec_x     = new float*[T+1];
-  vec_y     = new float*[T+1];
-  dens      = new float*[T+1];
-  pressure  = new float*[T+1];
-  force_x   = new float*[T+1];
-  force_y   = new float*[T+1];
+  tmp_vec_x = new double*[T+1];
+  tmp_vec_y = new double*[T+1];
+  tmp_dens  = new double*[T+1];
+  vec_x     = new double*[T+1];
+  vec_y     = new double*[T+1];
+  dens      = new double*[T+1];
+  pressure  = new double*[T+1];
+  force_x   = new double*[T+1];
+  force_y   = new double*[T+1];
   for (int i = 0; i < T+1; ++i) {
-    tmp_vec_x[i] = new float[T+1]();
-    tmp_vec_y[i] = new float[T+1]();
-    tmp_dens [i] = new float[T+1]();
-    vec_x    [i] = new float[T+1]();
-    vec_y    [i] = new float[T+1]();
-    dens     [i] = new float[T+1]();
-    pressure [i] = new float[T+1]();
-    force_x  [i] = new float[T+1]();
-    force_y  [i] = new float[T+1]();
+    tmp_vec_x[i] = new double[T+1]();
+    tmp_vec_y[i] = new double[T+1]();
+    tmp_dens [i] = new double[T+1]();
+    vec_x    [i] = new double[T+1]();
+    vec_y    [i] = new double[T+1]();
+    dens     [i] = new double[T+1]();
+    pressure [i] = new double[T+1]();
+    force_x  [i] = new double[T+1]();
+    force_y  [i] = new double[T+1]();
   }
 }
 
