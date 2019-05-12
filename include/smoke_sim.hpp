@@ -50,8 +50,6 @@ class smoke_sim {
 
 		std::pair<int, int> get_position (float x, float y) const noexcept;
 
-		std::pair<int, int> get_position (float x, float y) const noexcept;
-
 		// constructors
 		smoke_sim (int T);
 		smoke_sim (const smoke_sim& sim);

@@ -137,7 +137,6 @@ double** smoke_sim::get_vec_y () const noexcept {
   return this->vec_y;
 }
 
-<<<<<<< HEAD
 double** smoke_sim::get_force_x () const noexcept {
   return this->force_x;
 }
@@ -150,11 +149,6 @@ std::pair<int, int> smoke_sim::get_position (float x, float y) const noexcept {
   return { (int) (x * this->T), (int) (y * this->T) };
 }
 
-=======
-std::pair<int, int> smoke_sim::get_position (float x, float y) const noexcept {
-  return { (int) (x * this->T), (int) (y * this->T) };
-}
->>>>>>> ac56a44be4409ad83996a6b8e444fb2f5d722335
 smoke_sim* smoke_sim::set_diffuse (float rate) noexcept {
   this->diffuse_rate = rate;
   return this;

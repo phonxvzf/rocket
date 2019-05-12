@@ -123,7 +123,6 @@ void main_loop::draw(double dt) {
   static const int B = 0xBB;
 
   // simulate the model
-<<<<<<< HEAD
   if (!m_pause) {
 
     // add smoke from the rocket
@@ -143,24 +142,6 @@ void main_loop::draw(double dt) {
     }
 
     this->smoke->simulate(dt / 100.0);
-=======
-
-  const model::rocket* rock = dynamic_cast<model::rocket*> (this->objs[0]);
-  
-  std::pair<int, int> rocket_pos_in_smoke = this->smoke->get_position(
-    rock->get_x(),
-    rock->get_y()
-  );
-
-  this->smoke->get_dens()
-    [rocket_pos_in_smoke.first]
-    [rocket_pos_in_smoke.second] += 10;
-
-  this->smoke->simulate(dt / 100.0);
-
-  for (object* obj : this->objs) {
-    obj->simulate(dt);
->>>>>>> ac56a44be4409ad83996a6b8e444fb2f5d722335
   }
 
   // fill background

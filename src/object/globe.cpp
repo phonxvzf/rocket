@@ -25,7 +25,7 @@ namespace model {
   }
 
 
-  void globe::fix_density (float** dens) const {
+  void globe::fix_density (double** dens) const {
   }
 
   void globe::simulate (float dt) {
@@ -35,4 +35,6 @@ namespace model {
   }
 
   globe::globe (float x, float y, float r) : x(x), y(y), r(r), ang(0.0f) {} 
+
+  void globe::cleanup () {}
 }

@@ -14,13 +14,15 @@ namespace model {
     public:
 
       void draw        (int w, int h, SDL_Renderer* renderer) const override;
-      void fix_density (float** dens)                         const override;
+      void fix_density (double** dens)                        const override;
       void simulate    (float dt)                             override;
 
       float get_x  () const noexcept { return x;  }
       float get_y  () const noexcept { return y;  }
 
       globe (float x, float y, float r);
+
+      void cleanup ();
   };
 }
 
