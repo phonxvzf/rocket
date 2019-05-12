@@ -242,3 +242,22 @@ smoke_sim::smoke_sim (const smoke_sim& sim) : T(sim.T), diffuse_rate(10), viscos
   this->dens  = sim.dens;
   this->pressure = sim.pressure;
 }
+
+smoke_sim::~smoke_sim () {
+  for (int i = 0; i < T+1; ++i) {
+    delete tmp_dens[i];
+    delete tmp_vec_x[i];
+    delete tmp_vec_y[i];
+
+    delete dens[i];
+    delete vec_x[i];
+    delete vec_y[i];
+  }
+
+  delete tmp_dens;
+  delete tmp_vec_x;
+  delete tmp_vec_y;
+  delete dens;
+  delete vec_x;
+  delete vec_y;
+}

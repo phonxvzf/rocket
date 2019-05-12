@@ -83,7 +83,7 @@ void main_loop::keydown_callback(const SDL_Scancode scancode) {
 void main_loop::init() {
 
   // create a rocket
-  object* obj = dynamic_cast<object*> (new rocket(0.5, 1.0));
+  object* obj = dynamic_cast<object*> (new model::rocket(0.5, 1.0, 50, this->m_renderer));
   this->objs.emplace_back(obj);
 
   // set fluid configuration
@@ -119,6 +119,8 @@ void main_loop::draw(double dt) {
 
   // simulate the model
   if (!m_pause) {
+
+    // add smoke from the rocket
     std::pair<int, int> rocket_pos_in_smoke = this->smoke->get_position(
       this->objs[0]->get_x(),
       this->objs[0]->get_y()
@@ -128,12 +130,15 @@ void main_loop::draw(double dt) {
       [rocket_pos_in_smoke.first]
       [rocket_pos_in_smoke.second] += 10;
 
-    this->smoke->simulate(dt / 100.0);
-
+    // simulate smoke
     for (object* obj : this->objs) {
-      obj->simulate(dt);
+      obj->simulate(dt / 100.0);
+      obj->fix_density(this->smoke->get_dens());
     }
+
+    this->smoke->simulate(dt / 100.0);
   }
+
   // fill background
   const SDL_Rect window_rect = { 0, 0, m_window_width, m_window_height };
   SDL_SetRenderDrawColor (this->m_renderer, 0x00, 0x00, 0x00, 0xFF);

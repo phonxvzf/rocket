@@ -53,6 +53,9 @@ class smoke_sim {
 		// constructors
 		smoke_sim (int T);
 		smoke_sim (const smoke_sim& sim);
+
+		// destructor
+		virtual ~smoke_sim ();
 };
   
 #endif
