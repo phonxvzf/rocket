@@ -25,8 +25,8 @@ namespace model {
   }
 
 
-  void globe::fix_density (double** dens) const {
-  }
+  void globe::fix_force_x (int T, double** vx) const {}
+  void globe::fix_force_y (int T, double** vy) const {}
 
   void globe::simulate (float dt) {
     // rotate the object by dt

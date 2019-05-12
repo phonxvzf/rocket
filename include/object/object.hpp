@@ -8,7 +8,8 @@ class object {
 
   public:
     virtual void draw        (int w, int h, SDL_Renderer* renderer) const = 0;
-    virtual void fix_density (double** dens) const  = 0;
+    virtual void fix_force_x (int T, double** vx) const  = 0;
+    virtual void fix_force_y (int T, double** vy) const  = 0;
     virtual void simulate    (float dt)             = 0;
 
     virtual float get_x  () const = 0; 
@@ -17,7 +18,7 @@ class object {
     virtual void cleanup ();
 
     object  ();
-    ~object ();
+    virtual ~object ();
 };
 
 #endif

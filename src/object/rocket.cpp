@@ -25,7 +25,30 @@ namespace model {
   }
 
 
-  void rocket::fix_density (double** dens) const {
+  void rocket::fix_force_x (int T, double** vx) const {
+    const int sy = this->y * T;
+    const int ty = sy + this->s;
+    const int sx = this->x * T;
+    const int w = this->ratio * this->s / 2.0;
+    for (int y = sy; y < ty; ++y) {
+      for (int x = 0; x < w; ++x) {
+        vx[sx + x][y] = -1.0;
+        vx[sx + x + w][y] = 1.0;
+      }
+    }
+  }
+
+  void rocket::fix_force_y (int T, double** vy) const {
+    const int sx = this->x * T;
+    const int tx = sx + this->s;
+    const int sy = this->y * T;
+    const int h = this->s / 2.0;
+    for (int x = sx; x < tx; ++x) {
+      for (int y = 0; y < h; ++y) {
+        vy[x][sy + y] = -1.0;
+        vy[x][sy + y + h] = 1.0;
+      }
+    }
   }
 
   void rocket::simulate (float dt) {
@@ -38,7 +61,7 @@ namespace model {
     return this;
   }
 
-  rocket::rocket  (float x, float y, float s, SDL_Renderer *renderer) : img(nullptr), x(x), y(y), s(s) {
+  rocket::rocket  (float x, float y, int s, SDL_Renderer *renderer) : img(nullptr), x(x), y(y), s(s) {
     this->img = IMG_LoadTexture(renderer, "./rocket.png");
 
     int w, h;
