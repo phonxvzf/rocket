@@ -93,9 +93,9 @@ void main_loop::init() {
 
   // set fluid configuration
   this->smoke
-    ->set_diffuse   (2)
-    ->set_viscosity (0.0)
-    ->set_density   (1e-32);
+    ->set_diffuse   (5)
+    ->set_viscosity (1)
+    ->set_density   (0.001);
 
   // set pressure
   for (int i = 0; i <= (int) SIM_SIZE; ++i) {
@@ -107,11 +107,11 @@ void main_loop::init() {
   // set gravity
   for (int i = 0; i < (int) SIM_SIZE; ++i) {
     for (int j = 0; j < (int) SIM_SIZE; ++j) {
-      this->smoke->get_vec_x()[i][j]    = 0.0;
-      this->smoke->get_vec_y()[i][j]    = 0.0;
+      this->smoke->get_vec_x()[i][j]    = 0;
+      this->smoke->get_vec_y()[i][j]    = 0;
 
       this->smoke->get_force_x()[i][j]  = 0.0;
-      this->smoke->get_force_y()[i][j]  = 0.1;
+      this->smoke->get_force_y()[i][j]  = 0.3;
     }
   }
 }
@@ -133,7 +133,16 @@ void main_loop::draw(double dt) {
 
     this->smoke->get_dens()
       [rocket_pos_in_smoke.first]
-      [rocket_pos_in_smoke.second] += 10;
+      [rocket_pos_in_smoke.second] += 25;
+    this->smoke->get_vec_x()
+      [rocket_pos_in_smoke.first]
+      [rocket_pos_in_smoke.second] = 0;
+    this->smoke->get_vec_y()
+      [rocket_pos_in_smoke.first]
+      [rocket_pos_in_smoke.second] += 300;
+    this->smoke->get_vec_y()
+      [rocket_pos_in_smoke.first+1]
+      [rocket_pos_in_smoke.second] += 300;
 
     // simulate smoke
     for (object* obj : this->objs) {
