@@ -29,8 +29,8 @@ namespace fluid {
   // fluid advection
   void advect (int T, double** x, double** x0, double** u, double** v, double dt) {
 
-    for (int i = 1; i < T; ++i) {
-      for (int j = 1; j < T; ++j) {
+    for (int i = 0; i < T; ++i) {
+      for (int j = 0; j < T; ++j) {
         double cx = i + 0.5f, cy = j + 0.5f;
         
         double cu = (u[i][j] + u[i+1][j]) / 2.0;
@@ -60,17 +60,17 @@ namespace fluid {
   void diffuse (int T, double** x, double** x0, double k, double dt) {
     static const int iteration = 20;
 
-    const double coef = -k * dt;
+    const double coef = k * dt;
     for (int it = 0; it < iteration; ++it) {
       for (int i = 0; i < T; ++i) {
         for (int j = 0; j < T; ++j) {
           const int bound = (i == 0) + (i+1 == T) + (j == 0) + (j+1 == T);
-          x[i][j] = (x0[i][j] - coef * (
+          x[i][j] = (x0[i][j] + coef * (
                 (i   > 0 ? x[i-1][j] : 0.0) +
                 (i+1 < T ? x[i+1][j] : 0.0) +
                 (j   > 0 ? x[i][j-1] : 0.0) +
                 (j+1 < T ? x[i][j+1] : 0.0)
-                )) / (1 - 4 * coef + bound);
+                )) / (coef * (4 - bound) + 1);
         }
       }
     }
@@ -91,7 +91,7 @@ namespace fluid {
                 (i+1 < T ? p[i+1][j] : 0.0) +
                 (j   > 0 ? p[i][j-1] : 0.0) +
                 (j+1 < T ? p[i][j+1] : 0.0)
-                )) / (-4.0f + bound);
+                )) / (bound - 4);
         }
       }
     }
