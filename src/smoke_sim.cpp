@@ -17,12 +17,10 @@ namespace fluid {
 
   inline double trace_position (double T, double cx, double v, double dt) {
     double x = cx + v * dt;
-    /*
     while (0 > x || x > T) {
       if (0 > x) x = - x;
       if (x > T) x = 2 * T - x;
     }
-    */
     return x;
   }
 
@@ -66,8 +64,7 @@ namespace fluid {
     for (int it = 0; it < iteration; ++it) {
       for (int i = 0; i < T; ++i) {
         for (int j = 0; j < T; ++j) {
-          // const int bound = (i == 0) + (i+1 == T) + (j == 0) + (j+1 == T);
-          const int bound = (i == 0) + (i+1 == T) + (j+1 == T);
+          const int bound = (i == 0) + (i+1 == T) + (j == 0) + (j+1 == T);
           x[i][j] = (x0[i][j] + coef * (
                 (i   > 0 ? x[i-1][j] : 0.0) +
                 (i+1 < T ? x[i+1][j] : 0.0) +
@@ -88,9 +85,7 @@ namespace fluid {
         for (int j = 0; j < T; ++j) {
           // Neumann boundary condition will transform each affected neighbour to p[i][j]
           const double div_w = (w_x0[i+1][j] - w_x0[i][j]) + (w_y0[i][j+1] - w_y0[i][j]);
-          // const int bound = (i == 0) + (i+1 == T) + (j == 0) + (j+1 == T);
-          const int bound = (i == 0) + (i+1 == T) + (j+1 == T);
-
+          const int bound = (i == 0) + (i+1 == T) + (j == 0) + (j+1 == T);
           p[i][j] = (density * div_w - (
                 (i   > 0 ? p[i-1][j] : 0.0) +
                 (i+1 < T ? p[i+1][j] : 0.0) +
@@ -216,6 +211,20 @@ void smoke_sim::simulate (double dt) {
   this->evolve_dens (dt);
 }
 
+void smoke_sim::reset() {
+  for (int i = 0; i < T+1; ++i) {
+    for (int j = 0; j < T+1; ++j) {
+      this->dens      [i][j] = 0.0;
+      this->tmp_dens  [i][j] = 0.0;
+      this->vec_x     [i][j] = 0.0;
+      this->vec_y     [i][j] = 0.0;
+      this->tmp_vec_x [i][j] = 0.0;
+      this->tmp_vec_y [i][j] = 0.0;
+      this->pressure  [i][j] = 0.0;
+    }
+  }
+}
+
 smoke_sim::smoke_sim (int T) : T(T), diffuse_rate(10), viscosity(10) {
   tmp_vec_x = new double*[T+1];
   tmp_vec_y = new double*[T+1];
@@ -255,7 +264,6 @@ smoke_sim::~smoke_sim () {
     delete[] tmp_dens[i];
     delete[] tmp_vec_x[i];
     delete[] tmp_vec_y[i];
-
     delete[] dens[i];
     delete[] vec_x[i];
     delete[] vec_y[i];

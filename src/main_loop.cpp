@@ -7,7 +7,7 @@
 #include "object/rocket.hpp"
 namespace util {
   void interpolate_color(double p, double min_p, double max_p, uint8_t* r, uint8_t* g, uint8_t* b) {
-    const double h = std::max(0.0, 6 - ((p - min_p) / (max_p - min_p) * 6 + 1));
+    const double h = std::max(0.0, 6 - ((p - min_p) / (max_p - min_p) * 6));
     const double x = 1 - std::abs(std::fmod(h, 2.0f) - 1);
     if (0 <= h && h <= 1) {
       *r = 255;
@@ -65,6 +65,7 @@ void main_loop::clean_up() {
   for (object* obj : this->objs) {
     delete obj;
   }
+
   delete this->smoke;
 
   SDL_DestroyRenderer(m_renderer);
@@ -76,12 +77,23 @@ void main_loop::keydown_callback(const SDL_Scancode scancode) {
     case SDL_SCANCODE_Q:
       m_continue_loop = false;
       break;
+
     case SDL_SCANCODE_P:
       m_pause = !m_pause;
       break;
+
+    case SDL_SCANCODE_R:
+      if (objs.size() > 0) {
+        model::rocket* rock = dynamic_cast<model::rocket*> (this->objs[0]);
+        rock->set_position(0.5f, 1.0f);
+        this->smoke->reset();
+      }
+      break;
+
     case SDL_SCANCODE_SPACE:
       m_show_pressure = !m_show_pressure;
       break;
+
     default:
       // Do nothing
       break;
@@ -104,15 +116,15 @@ void main_loop::init() {
     ->set_density   (0.001);
 
   // set pressure
-  for (int i = 0; i < (int) SIM_SIZE; ++i) {
-    for (int j = 0; j < (int) SIM_SIZE; ++j) {
+  for (int i = 0; i <= (int) SIM_SIZE; ++i) {
+    for (int j = 0; j <= (int) SIM_SIZE; ++j) {
       this->smoke->get_pressure()[i][j] = 0.0f;
     }
   }
   
   // set gravity
-  for (int i = 0; i < (int) SIM_SIZE; ++i) {
-    for (int j = 0; j < (int) SIM_SIZE; ++j) {
+  for (int i = 0; i <= (int) SIM_SIZE; ++i) {
+    for (int j = 0; j <= (int) SIM_SIZE; ++j) {
       this->smoke->get_vec_x()[i][j]    = 0;
       this->smoke->get_vec_y()[i][j]    = 0;
 
@@ -143,6 +155,9 @@ void main_loop::draw(double dt) {
       this->smoke->get_vec_x()
         [pos.first]
         [pos.second] = 0;
+      this->smoke->get_vec_x()
+        [pos.first+1]
+        [pos.second] = 0;
       this->smoke->get_vec_y()
         [pos.first]
         [pos.second] += 300;
@@ -150,21 +165,15 @@ void main_loop::draw(double dt) {
         [pos.first+1]
         [pos.second] += 300;
     }
-    
-    // simulate smoke
+
+    // animate objects
     for (object* obj : this->objs) {
       obj->simulate(dt / 100.0);
-      obj->fix_force_x(SIM_SIZE, this->smoke->get_force_x());
-      obj->fix_force_y(SIM_SIZE, this->smoke->get_force_y());
     }
 
+    // simulate smoke
     this->smoke->simulate(dt / 100.0);
   }
-
-  // fill background
-  const SDL_Rect window_rect = { 0, 0, m_window_width, m_window_height };
-  SDL_SetRenderDrawColor (this->m_renderer, 0x00, 0x00, 0x00, 0xFF);
-  SDL_RenderFillRect     (this->m_renderer, &window_rect);
 
   // render the smoke
   const size_t  size_x = this->m_window_width  / SIM_SIZE;
@@ -186,8 +195,8 @@ void main_loop::draw(double dt) {
       SDL_Rect rect {x, y, (int) size_x + (i < pad_x), (int) size_y + (j < pad_y)};
       uint8_t alpha = std::min(255, (int) floor(this->smoke->get_dens()[i][j] * 256));
 
-      if (this->smoke->get_pressure()[i][j] > max_p) max_p = this->smoke->get_pressure()[i][j];
-      if (this->smoke->get_pressure()[i][j] < min_p) min_p = this->smoke->get_pressure()[i][j];
+      max_p = std::max(max_p, this->smoke->get_pressure()[i][j]);
+      min_p = std::min(min_p, this->smoke->get_pressure()[i][j]);
 
       if (this->m_show_pressure) {
         util::interpolate_color(this->smoke->get_pressure()[i][j], min_p, max_p, &r, &g, &b);

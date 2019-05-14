@@ -43,6 +43,7 @@ class smoke_sim {
     double** get_force_y  () const noexcept;
 
     void simulate (double dt);
+    void reset    ();
 
     smoke_sim* set_diffuse   (float rate) noexcept;
     smoke_sim* set_viscosity (float rate) noexcept;

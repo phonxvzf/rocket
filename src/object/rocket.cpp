@@ -52,7 +52,7 @@ namespace model {
   }
 
   void rocket::simulate (float dt) {
-    this->y -= dt / 1000;
+    this->y -= dt / 100;
   }
 
   std::pair<int, int> rocket::get_smoke_position (int T) const noexcept {
@@ -75,6 +75,6 @@ namespace model {
   }
 
   void rocket::cleanup () {
-    // delete this->img; 
+    SDL_DestroyTexture(this->img);
   }
 }
