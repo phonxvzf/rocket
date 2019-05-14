@@ -17,10 +17,12 @@ namespace fluid {
 
   inline double trace_position (double T, double cx, double v, double dt) {
     double x = cx + v * dt;
+    /*
     while (0 > x || x > T) {
       if (0 > x) x = - x;
       if (x > T) x = 2 * T - x;
     }
+    */
     return x;
   }
 
@@ -31,7 +33,7 @@ namespace fluid {
 
     for (int i = 0; i < T; ++i) {
       for (int j = 0; j < T; ++j) {
-        double cx = i + 0.5f, cy = j + 0.5f;
+        double cx = i + 0.5, cy = j + 0.5;
         
         double cu = (u[i][j] + u[i+1][j]) / 2.0;
         double cv = (v[i][j] + v[i][j+1]) / 2.0;
@@ -99,8 +101,10 @@ namespace fluid {
     for (int i = 0; i < T; ++i) {
       for (int j = 0; j < T; ++j) {
         // update velocity field according to Helmholtz-Hodge decomposition
-        w_x[i][j] = std::clamp(w_x0[i][j] - (p[i+1][j] - p[i][j]) / density, -MAX_VELOCITY, MAX_VELOCITY);
-        w_y[i][j] = std::clamp(w_y0[i][j] - (p[i][j+1] - p[i][j]) / density, -MAX_VELOCITY, MAX_VELOCITY);
+        const double grad_x = (i+1 == T) ? 0 : p[i+1][j] - p[i][j];
+        const double grad_y = (j+1 == T) ? 0 : p[i][j+1] - p[i][j];
+        w_x[i][j] = std::clamp(w_x0[i][j] - grad_x / density, -MAX_VELOCITY, MAX_VELOCITY);
+        w_y[i][j] = std::clamp(w_y0[i][j] - grad_y / density, -MAX_VELOCITY, MAX_VELOCITY);
       }
     }
   }
@@ -245,19 +249,21 @@ smoke_sim::smoke_sim (const smoke_sim& sim) : T(sim.T), diffuse_rate(10), viscos
 
 smoke_sim::~smoke_sim () {
   for (int i = 0; i < T+1; ++i) {
-    delete tmp_dens[i];
-    delete tmp_vec_x[i];
-    delete tmp_vec_y[i];
+    delete[] tmp_dens[i];
+    delete[] tmp_vec_x[i];
+    delete[] tmp_vec_y[i];
 
-    delete dens[i];
-    delete vec_x[i];
-    delete vec_y[i];
+    delete[] dens[i];
+    delete[] vec_x[i];
+    delete[] vec_y[i];
+    delete[] pressure[i];
   }
 
-  delete tmp_dens;
-  delete tmp_vec_x;
-  delete tmp_vec_y;
-  delete dens;
-  delete vec_x;
-  delete vec_y;
+  delete[] tmp_dens;
+  delete[] tmp_vec_x;
+  delete[] tmp_vec_y;
+  delete[] dens;
+  delete[] vec_x;
+  delete[] vec_y;
+  delete[] pressure;
 }
