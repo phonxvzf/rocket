@@ -55,6 +55,10 @@ namespace model {
     this->y -= dt / 1000;
   }
 
+  std::pair<int, int> rocket::get_smoke_position (int T) const noexcept {
+    return {this->x * T, this->y * T};
+  }
+
   rocket* rocket::set_position (float x, float y) {
     this->x = x;
     this->y = y;

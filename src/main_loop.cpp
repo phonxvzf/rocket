@@ -87,6 +87,9 @@ void main_loop::keydown_callback(const SDL_Scancode scancode) {
 
 void main_loop::init() {
 
+  // pause the simulation
+  this->m_pause = true;
+  
   // create a rocket
   object* obj = dynamic_cast<object*> (new model::rocket(0.5, 1.0, 50, this->m_renderer));
   this->objs.emplace_back(obj);
@@ -126,23 +129,22 @@ void main_loop::draw(double dt) {
   if (!m_pause) {
 
     // add smoke from the rocket
-    std::pair<int, int> rocket_pos_in_smoke = this->smoke->get_position(
-      this->objs[0]->get_x(),
-      this->objs[0]->get_y()
-    );
+    model::rocket* rock = dynamic_cast<model::rocket*> (this->objs[0]);
+
+    std::pair<int, int> pos = rock->get_smoke_position(SIM_SIZE);
 
     this->smoke->get_dens()
-      [rocket_pos_in_smoke.first]
-      [rocket_pos_in_smoke.second] += 25;
+      [pos.first]
+      [pos.second] += 25;
     this->smoke->get_vec_x()
-      [rocket_pos_in_smoke.first]
-      [rocket_pos_in_smoke.second] = 0;
+      [pos.first]
+      [pos.second] = 0;
     this->smoke->get_vec_y()
-      [rocket_pos_in_smoke.first]
-      [rocket_pos_in_smoke.second] += 300;
+      [pos.first]
+      [pos.second] += 300;
     this->smoke->get_vec_y()
-      [rocket_pos_in_smoke.first+1]
-      [rocket_pos_in_smoke.second] += 300;
+      [pos.first+1]
+      [pos.second] += 300;
 
     // simulate smoke
     for (object* obj : this->objs) {

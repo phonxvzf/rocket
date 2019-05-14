@@ -64,7 +64,8 @@ namespace fluid {
     for (int it = 0; it < iteration; ++it) {
       for (int i = 0; i < T; ++i) {
         for (int j = 0; j < T; ++j) {
-          const int bound = (i == 0) + (i+1 == T) + (j == 0) + (j+1 == T);
+          // const int bound = (i == 0) + (i+1 == T) + (j == 0) + (j+1 == T);
+          const int bound = (i == 0) + (i+1 == T) + (j+1 == T);
           x[i][j] = (x0[i][j] + coef * (
                 (i   > 0 ? x[i-1][j] : 0.0) +
                 (i+1 < T ? x[i+1][j] : 0.0) +
@@ -85,7 +86,9 @@ namespace fluid {
         for (int j = 0; j < T; ++j) {
           // Neumann boundary condition will transform each affected neighbour to p[i][j]
           const double div_w = (w_x0[i+1][j] - w_x0[i][j]) + (w_y0[i][j+1] - w_y0[i][j]);
-          const int bound = (i == 0) + (i+1 == T) + (j == 0) + (j+1 == T);
+          // const int bound = (i == 0) + (i+1 == T) + (j == 0) + (j+1 == T);
+          const int bound = (i == 0) + (i+1 == T) + (j+1 == T);
+
           p[i][j] = (density * div_w - (
                 (i   > 0 ? p[i-1][j] : 0.0) +
                 (i+1 < T ? p[i+1][j] : 0.0) +

@@ -4,6 +4,8 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
+#include <utility>
+
 #include "object/object.hpp"
 
 namespace model {
@@ -29,6 +31,7 @@ namespace model {
       float get_x  () const noexcept { return x;  }
       float get_y  () const noexcept { return y;  }
 
+      std::pair<int, int> get_smoke_position (int T) const noexcept;
       rocket* set_position (float x, float y);
 
       rocket (float x, float y, int s, SDL_Renderer* renderer);
