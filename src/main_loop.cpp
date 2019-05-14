@@ -147,7 +147,8 @@ void main_loop::draw(double dt) {
     // simulate smoke
     for (object* obj : this->objs) {
       obj->simulate(dt / 100.0);
-      obj->fix_density(this->smoke->get_dens());
+      obj->fix_force_x(SIM_SIZE, this->smoke->get_force_x());
+      obj->fix_force_y(SIM_SIZE, this->smoke->get_force_y());
     }
 
     this->smoke->simulate(dt / 100.0);

@@ -16,12 +16,14 @@ namespace model {
       float vx, vy;
       float t;
 
-      float ratio, s;
+      float ratio;
+      int s;
 
     public:
 
       void draw        (int w, int h, SDL_Renderer* renderer) const override;
-      void fix_density (double** dens)                        const override;
+      void fix_force_x (int T, double** vx)                   const override;
+      void fix_force_y (int T, double** vy)                   const override;
       void simulate    (float dt)                             override;
 
       float get_x  () const noexcept { return x;  }
@@ -29,7 +31,7 @@ namespace model {
 
       rocket* set_position (float x, float y);
 
-      rocket (float x, float y, float s, SDL_Renderer* renderer);
+      rocket (float x, float y, int s, SDL_Renderer* renderer);
 
       void cleanup ();
   };

@@ -14,7 +14,8 @@ namespace model {
     public:
 
       void draw        (int w, int h, SDL_Renderer* renderer) const override;
-      void fix_density (double** dens)                        const override;
+      void fix_force_x (int T, double** vx)                   const override;
+      void fix_force_y (int T, double** vy)                   const override;
       void simulate    (float dt)                             override;
 
       float get_x  () const noexcept { return x;  }
