@@ -79,6 +79,9 @@ void main_loop::keydown_callback(const SDL_Scancode scancode) {
     case SDL_SCANCODE_P:
       m_pause = !m_pause;
       break;
+    case SDL_SCANCODE_SPACE:
+      m_show_pressure = !m_show_pressure;
+      break;
     default:
       // Do nothing
       break;
@@ -101,8 +104,8 @@ void main_loop::init() {
     ->set_density   (0.001);
 
   // set pressure
-  for (int i = 0; i <= (int) SIM_SIZE; ++i) {
-    for (int j = 0; j <= (int) SIM_SIZE; ++j) {
+  for (int i = 0; i < (int) SIM_SIZE; ++i) {
+    for (int j = 0; j < (int) SIM_SIZE; ++j) {
       this->smoke->get_pressure()[i][j] = 0.0f;
     }
   }
@@ -133,19 +136,21 @@ void main_loop::draw(double dt) {
 
     std::pair<int, int> pos = rock->get_smoke_position(SIM_SIZE);
 
-    this->smoke->get_dens()
-      [pos.first]
-      [pos.second] += 25;
-    this->smoke->get_vec_x()
-      [pos.first]
-      [pos.second] = 0;
-    this->smoke->get_vec_y()
-      [pos.first]
-      [pos.second] += 300;
-    this->smoke->get_vec_y()
-      [pos.first+1]
-      [pos.second] += 300;
-
+    if (pos.second > 0) {
+      this->smoke->get_dens()
+        [pos.first]
+        [pos.second] += 25;
+      this->smoke->get_vec_x()
+        [pos.first]
+        [pos.second] = 0;
+      this->smoke->get_vec_y()
+        [pos.first]
+        [pos.second] += 300;
+      this->smoke->get_vec_y()
+        [pos.first+1]
+        [pos.second] += 300;
+    }
+    
     // simulate smoke
     for (object* obj : this->objs) {
       obj->simulate(dt / 100.0);
@@ -167,6 +172,10 @@ void main_loop::draw(double dt) {
   const size_t  size_y = this->m_window_height / SIM_SIZE; 
   const size_t  pad_y  = this->m_window_height % SIM_SIZE;
 
+  uint8_t r, g, b;
+  static double min_p = std::numeric_limits<double>::max();
+  static double max_p = std::numeric_limits<double>::min();
+
   for (size_t i = 0; i < SIM_SIZE; ++i) {
     for (size_t j = 0; j < SIM_SIZE; ++j) {
 
@@ -175,9 +184,21 @@ void main_loop::draw(double dt) {
 
       // draw density
       SDL_Rect rect {x, y, (int) size_x + (i < pad_x), (int) size_y + (j < pad_y)};
-      const uint8_t alpha = std::min(255, (int) floor(this->smoke->get_dens()[i][j] * 256));
+      uint8_t alpha = std::min(255, (int) floor(this->smoke->get_dens()[i][j] * 256));
 
-      SDL_SetRenderDrawColor (this->m_renderer, R, G, B, alpha); 
+      if (this->smoke->get_pressure()[i][j] > max_p) max_p = this->smoke->get_pressure()[i][j];
+      if (this->smoke->get_pressure()[i][j] < min_p) min_p = this->smoke->get_pressure()[i][j];
+
+      if (this->m_show_pressure) {
+        util::interpolate_color(this->smoke->get_pressure()[i][j], min_p, max_p, &r, &g, &b);
+        alpha = 0xFF;
+      } else {
+        r = R;
+        g = G;
+        b = B;
+      }
+
+      SDL_SetRenderDrawColor (this->m_renderer, r, g, b, alpha); 
       SDL_RenderFillRect     (this->m_renderer, &rect);
     }
   }
