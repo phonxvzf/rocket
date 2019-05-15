@@ -58,6 +58,7 @@ main_loop::main_loop(SDL_Window *window, int width, int height)
       );
 
   if (m_renderer == nullptr) throw sdl_exception("Could not create renderer");
+  SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND);
 }
 
 void main_loop::clean_up() {
